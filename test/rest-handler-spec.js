@@ -1,3 +1,6 @@
+var Router = require.resolve('amd-router/Router');
+console.log('Router found: ' + !!Router);
+
 var restHandler = require('../index');
 
 var MockRequest = require('./MockRequest');
