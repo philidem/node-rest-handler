@@ -1,9 +1,9 @@
 var RESTHandler = require('./lib/rest-handler/RESTHandler');
 
 module.exports = {
-	create : function(options) {
+	create: function(options) {
 		return new RESTHandler(options);
 	},
 
-	RESTHandler : RESTHandler
+	RESTHandler: RESTHandler
 };
