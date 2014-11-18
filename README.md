@@ -1,7 +1,14 @@
 node-rest-handler
 =================
 
-A module for creating a request handler that does REST style routing
+A module for creating a request handler that does REST style routing.
+
+Unlike express, this request handler makes some simplifying assumptions:
+- Routes have paths with simple placeholders or static paths (for anything more complicated, a different middleware can be added)
+- Instead of passing around `req`, `res`, and `next`, these three properties are encapsulated in a single object (the `rest` object).
+- Route matching happens before any request handling so that all middleware and final route handler know which route matched. Requests that do not match any routes are a special case and can be handled via a `routeNotFound` listener.
+
+**NOTE:** The underlying router is https://github.com/philidem/path-based-router/
 
 ## Installation
 ```bash
