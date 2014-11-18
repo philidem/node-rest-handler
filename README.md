@@ -131,7 +131,7 @@ restHandler.addRoute({
     }
 });
 ```
-Start an http server and delete handling of requests to REST handler
+Start an http server and delegate handling of requests to REST handler
 ```javascript
 // Create standard HTTP server
 var server = require('http').createServer();
