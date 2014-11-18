@@ -1,6 +1,5 @@
 function MockRequest(options) {
-
-	var options = options || {};
+	options = options || {};
 
 	this.headers = options.headers || {};
 	this.data = options.data || [];
@@ -11,7 +10,8 @@ function MockRequest(options) {
 
 MockRequest.prototype.on = function(event, func) {
 	if (event === 'data') {
-		if (this.data) {
+		var data = this.data;
+		if (data) {
 			
 			if (Array.isArray(data)) {
 				for (var i = 0; i < data.length; i++) {

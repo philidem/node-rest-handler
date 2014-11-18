@@ -68,23 +68,45 @@ describe('route request', function() {
     var myRestHandler = require('..').create({
         routes: [
             {
-                route: '/cars',
-                fn: function(rest) {
+                path: '/cars',
+                handler: function(rest) {
                     rest.send(carsResponse);
                 }
             },
             {
-                route: '/cars/:carId',
-                fn: function(rest) {
+                path: '/cars/:carId',
+                handler: function(rest) {
                     rest.send({
                         _id: rest.params.carId
                     });
                 }
             },
             {
-                route: '/cause/error',
-                fn: function(rest) {
+                path: '/cause/error',
+                handler: function(rest) {
                     rest.error('Danger! System overheating.');
+                }
+            },
+            {
+                path: '/cause/error/:statusCode',
+                handler: function(rest) {
+                    rest.error(Number(rest.params.statusCode), 'Danger! System overheating.');
+                }
+            },
+            {
+                path: '/echo/body',
+                handler: function(rest) {
+                    rest.getBody(function(err, body) {
+                        rest.send(body);
+                    });
+                }
+            },
+            {
+                path: '/echo/parsed-body',
+                handler: function(rest) {
+                    rest.getParsedBody(function(err, body) {
+                        rest.send(body);
+                    });
                 }
             }
         ]
@@ -111,7 +133,6 @@ describe('route request', function() {
 
         expect(res.getHeader('Content-Type')).to.equal('application/json');
         expect(JSON.parse(res.mock_getWritten())).to.deep.equal(carsResponse);
-
     });
 
     it('should handle parameters', function() {
@@ -125,6 +146,64 @@ describe('route request', function() {
         expect(rest.params.carId).to.equal('123');
         expect(JSON.parse(res.mock_getWritten())).to.deep.equal({
             _id: '123'
+        });
+    });
+
+    it('should serialize errors and use default 500 status code', function() {
+        var req = new MockRequest();
+        req.url = '/cause/error';
+
+        var res = new MockResponse();
+
+        var rest = myRestHandler.handle(req, res);
+        expect(res.getHeader('Content-Type')).to.equal('text/plain');
+        expect(rest.res.statusCode).to.equal(500);
+        expect(res.mock_getWritten()).to.equal('Danger! System overheating.');
+    });
+
+    it('should serialize errors and use given status code', function() {
+        var req = new MockRequest();
+        req.url = '/cause/error/400';
+
+        var res = new MockResponse();
+
+        var rest = myRestHandler.handle(req, res);
+        expect(res.getHeader('Content-Type')).to.equal('text/plain');
+        expect(rest.res.statusCode).to.equal(400);
+        expect(res.mock_getWritten()).to.equal('Danger! System overheating.');
+    });
+
+    it('should support rest.getBody()', function() {
+        var req = new MockRequest({
+            method: 'POST',
+            // simulate chunks of data
+            data: ['this ', 'is ', 'a ', 'test']
+        });
+        req.url = '/echo/body';
+
+        var res = new MockResponse();
+
+        var rest = myRestHandler.handle(req, res);
+        expect(res.getHeader('Content-Type')).to.equal('text/plain');
+        expect(rest.res.statusCode).to.equal(200);
+        expect(res.mock_getWritten()).to.equal('this is a test');
+    });
+
+    it('should support rest.getParsedBody()', function() {
+        var req = new MockRequest({
+            method: 'POST',
+            // simulate chunks of data
+            data: ['{', '"a":', '123', '}']
+        });
+        req.url = '/echo/parsed-body';
+
+        var res = new MockResponse();
+
+        var rest = myRestHandler.handle(req, res);
+        expect(res.getHeader('Content-Type')).to.equal('application/json');
+        expect(rest.res.statusCode).to.equal(200);
+        expect(JSON.parse(res.mock_getWritten())).to.deep.equal({
+            a: 123
         });
     });
 });
