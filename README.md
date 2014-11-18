@@ -61,7 +61,10 @@ restHandler
         // just log missing route
         console.log('NOT FOUND: ' + req.method + ' ' + req.url);
     });
+```
 
+Add some routes:
+```javascript
 restHandler.addRoute({
     // Route path (required)
     path: '/health/check',
@@ -82,10 +85,7 @@ restHandler.addRoute({
         rest.send('Alive');
     }
 });
-```
 
-Add some routes:
-```javascript
 // Add a route with parameter placeholder
 restHandler.addRoute({
     // Route path (required)
