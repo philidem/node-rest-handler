@@ -97,6 +97,48 @@ restHandler.addRoute({
         });
     }
 });
+
+// Example of reading JSON from request body
+restHandler.addRoute({
+    path: '/order/:orderId',
+    method: 'POST',
+    // getParsedBody() will read all of the chunks of data and parse it as JSON
+    handler: function(rest) {
+        // NOTE: you can also use req.on('data', function(data) {}) to
+        // read data chunks manually and parse the resultant string.
+        rest.getParsedBody(function(err, body) {
+            if (err) {
+                // log the error
+                console.error(err);
+                return rest.send(500, 'Error reading request body');
+            }
+
+            // echo the body (body will be a JavaScript Object)
+            rest.send(body);
+        });
+    }
+});
+
+// Example of reading raw text from request body
+restHandler.addRoute({
+    path: '/echo/body',
+    method: 'POST',
+    // getParsedBody() will read all of the chunks of data and parse it as JSON
+    handler: function(rest) {
+        // NOTE: you can also use req.on('data', function(data) {}) to
+        // read data chunks manually
+        rest.getBody(function(err, body) {
+            if (err) {
+                // log the error
+                console.error(err);
+                return rest.send(500, 'Error reading request body');
+            }
+
+            // echo the body (body will be a String Object)
+            rest.send(body);
+        });
+    }
+});
 ```
 
 Error handling:
