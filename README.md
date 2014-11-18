@@ -110,7 +110,7 @@ restHandler.addRoute({
             // send error with 400 code
             // Request that will cause error: "http://localhost:8080/orders/"
             //
-            // NOTE: Status code is optional. Calling error with no argument will
+            // NOTE: Status code is optional. Calling error with one argument will
             // use the default error status code of 500.
             return rest.error(400, '"orderId" is required');
         }
