@@ -72,7 +72,7 @@ restHandler.addRoute({
     // Route method (optional, assumed to be all methods if not provided).
     // Allowed values:
     // - * (to match any method)
-    // - (any legal HTTP method -- GET, POST, PUT, PATCH, etc.)
+    // - Any legal HTTP method ("GET", "POST", "PUT", "PATCH", etc.)
     method: '*',
 
     description: 'Health check',
