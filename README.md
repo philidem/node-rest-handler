@@ -134,6 +134,34 @@ restHandler.addRoute({
     }
 });
 ```
+
+Error handling:
+```javascript
+// Add a route that will send an error
+restHandler.addRoute({
+    path: '/simulate-error',
+    handler: function(rest) {
+        rest.error(400, {
+            code: 'INVALID_REQUEST'
+        });
+    }
+});
+
+// Add error handler
+restHandler.errorHandler(function(rest, err) {
+    if (err.code === 'INVALID_REQUEST') {
+        // special handling for requests that were given code of "INVALID_REQUEST"
+        rest.res.setHeader('Content-Type', 'text/html');
+        rest.send('<html><body>Invalid request</body></html>');
+    } else {
+        // Log the error
+        console.error(err);
+        // Output generic error message to end-user
+        rest.send(500, 'Unknown error occurred');
+    }
+});
+```
+
 Start an http server and delegate handling of requests to REST handler
 ```javascript
 // Create standard HTTP server
