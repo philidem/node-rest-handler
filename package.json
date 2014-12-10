@@ -1,6 +1,6 @@
 {
   "name": "rest-handler",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "description": "A module for creating a request handler that does REST style routing",
   "homepage": "https://github.com/philidem/node-rest-handler",
   "author": "Phil Gates-Idem <phillip.idem@gmail.com>",

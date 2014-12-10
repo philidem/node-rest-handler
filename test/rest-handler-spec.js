@@ -91,6 +91,8 @@ describe('route request', function() {
         {
             path: '/cars',
             
+            method: 'GET',
+            
             before: function(rest) {
                 rest.routeBeforeInvoked = true;
                 rest.next();
@@ -100,6 +102,19 @@ describe('route request', function() {
                 rest.send(carsResponse);
             }
         },
+        
+        {
+            path: '/cars',
+            
+            method: 'POST',
+            
+            handler: function(rest) {
+                rest.send({
+                    success: true
+                });
+            }
+        },
+        
         {
             path: '/cars/:carId',
             handler: function(rest) {
@@ -167,6 +182,20 @@ describe('route request', function() {
 
         expect(res.getHeader('Content-Type')).to.equal('application/json');
         expect(JSON.parse(res.mock_getWritten())).to.deep.equal(carsResponse);
+    });
+    
+    it('should return method not allowed if route match found but not for exact method', function() {
+        var req = new MockRequest();
+        req.url = '/cars';
+        req.method = 'PATCH';
+        
+        var res = new MockResponse();
+        
+        myRestHandler.handle(req, res);
+        
+        expect(res.getHeader('Allow')).to.equal('GET,POST');
+        expect(res.statusCode).to.equal(405);
+        expect(res.mock_getWritten()).to.equal('Method Not Allowed');
     });
 
     it('should handle parameters', function() {
