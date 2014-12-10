@@ -65,62 +65,85 @@ describe('route request', function() {
         ]
     };
 
-    var myRestHandler = require('..').create({
-        routes: [
-            {
-                path: '/cars',
-                
-                before: function(rest) {
-                    rest.routeBeforeInvoked = true;
-                    rest.next();
-                },
-                
-                handler: function(rest) {
-                    rest.send(carsResponse);
-                }
-            },
-            {
-                path: '/cars/:carId',
-                handler: function(rest) {
-                    rest.send({
-                        _id: rest.params.carId
-                    });
-                }
-            },
-            {
-                path: '/cause/error',
-                handler: function(rest) {
-                    rest.error('Danger! System overheating.');
-                }
-            },
-            {
-                path: '/cause/error/:statusCode',
-                handler: function(rest) {
-                    rest.error(Number(rest.params.statusCode), 'Danger! System overheating.');
-                }
-            },
-            {
-                path: '/echo/body',
-                handler: function(rest) {
-                    rest.getBody(function(err, body) {
-                        rest.send(body);
-                    });
-                }
-            },
-            {
-                path: '/echo/parsed-body',
-                handler: function(rest) {
-                    rest.getParsedBody(function(err, body) {
-                        rest.send(body);
-                    });
-                }
-            }
-        ]
-    });
+    var myRestHandler = require('..')
+        .create()
     
-    myRestHandler.before(function(rest) {
-        rest.beforeInvoked = true;
-        rest.next();
+        .before(function(rest) {
+            rest.beforeInvoked = true;
+            rest.next();
+        })
+        
+        .middleware({
+            init: function(restHandler) {
+                restHandler.on('route', function(event) {
+                    var route = event.route;
+                    if (route.path === '/route-specific-middleware') {
+                        route.addBefore(function(rest) {
+                            rest.specialMiddlewareAdded = true;
+                            rest.next();
+                        });
+                    }
+                });
+            }
+        });
+        
+    [
+        {
+            path: '/cars',
+            
+            before: function(rest) {
+                rest.routeBeforeInvoked = true;
+                rest.next();
+            },
+            
+            handler: function(rest) {
+                rest.send(carsResponse);
+            }
+        },
+        {
+            path: '/cars/:carId',
+            handler: function(rest) {
+                rest.send({
+                    _id: rest.params.carId
+                });
+            }
+        },
+        {
+            path: '/cause/error',
+            handler: function(rest) {
+                rest.error('Danger! System overheating.');
+            }
+        },
+        {
+            path: '/cause/error/:statusCode',
+            handler: function(rest) {
+                rest.error(Number(rest.params.statusCode), 'Danger! System overheating.');
+            }
+        },
+        {
+            path: '/echo/body',
+            handler: function(rest) {
+                rest.getBody(function(err, body) {
+                    rest.send(body);
+                });
+            }
+        },
+        {
+            path: '/echo/parsed-body',
+            handler: function(rest) {
+                rest.getParsedBody(function(err, body) {
+                    rest.send(body);
+                });
+            }
+        },
+        {
+            path: '/route-specific-middleware',
+            handler: function(rest) {
+                rest.send('Success');
+            }
+        }
+    ].forEach(function(routeConfig) {
+        myRestHandler.addRoute(routeConfig);
     });
 
     it('should send 404 for unrecognized route', function() {
@@ -180,6 +203,19 @@ describe('route request', function() {
         
         var rest = myRestHandler.handle(req, res);
         expect(rest.beforeInvoked).to.equal(true);
+    });
+    
+    it('should support middleware with an init function', function() {
+        var req = new MockRequest();
+        req.url = '/route-specific-middleware';
+        
+        var res = new MockResponse();
+        
+        var rest = myRestHandler.handle(req, res);
+        
+        expect(rest.url.path).to.equal('/route-specific-middleware');
+        expect(rest.route._before.length).to.equal(1);
+        expect(rest.specialMiddlewareAdded).to.equal(true);
     });
     
     it('should support route-specific middleware', function() {

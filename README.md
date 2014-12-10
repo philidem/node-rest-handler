@@ -1,3 +1,39 @@
+node-rest-handler
+=================
+
+A module for creating a request handler that does REST style routing.
+
+Unlike express, this request handler makes some simplifying assumptions:
+- Routes have paths with simple placeholders or static paths (for anything more complicated, a different middleware can be added)
+- Instead of passing around `req`, `res`, and `next`, these three properties are encapsulated in a single object (the `rest` object).
+- Route matching happens before any request handling so that all middleware and final route handler know which route matched. Requests that do not match any routes are a special case and can be handled via a `routeNotFound` listener.
+
+**NOTE:** The underlying router is https://github.com/philidem/path-based-router/
+
+## Installation
+```bash
+npm install rest-handler --save
+```
+
+## Usage
+**Create REST handler:**
+```javascript
+// Create instance of REST handler
+var restHandler = require('rest-handler').create();
+```
+
+**Add some middleware:**
+```javascript
+// middleware is added via "before" method call
+restHandler
+// Authenticate
+    .before(function(rest) {
+        rest.session = {
+            userId: 'john'
+        };
+
+        // go to next handler
+        rest.next();
     })
 
     // Authorize
@@ -11,7 +47,7 @@
     });
 ```
 
-Add some listeners:
+**Add some listeners:**
 ```javascript
 // Listen for each request (unlike middleware, listeners are non-sequential)
 restHandler
@@ -27,7 +63,7 @@ restHandler
     });
 ```
 
-Add some routes:
+**Add some routes:**
 ```javascript
 restHandler.addRoute({
     // Route path (required)
@@ -36,7 +72,7 @@ restHandler.addRoute({
     // Route method (optional, assumed to be all methods if not provided).
     // Allowed values:
     // - * (to match any method)
-    // - (any legal HTTP method -- GET, POST, PUT, PATCH, etc.)
+    // - Any legal HTTP method ("GET", "POST", "PUT", "PATCH", etc.)
     method: '*',
 
     description: 'Health check',
@@ -99,7 +135,8 @@ restHandler.addRoute({
 });
 ```
 
-// Route-specific "middleware"
+**Route-specific "middleware":**
+```javascript
 restHandler.addRoute({
     path: '/top-secret',
     
@@ -126,8 +163,87 @@ restHandler.addRoute({
     }
 });
 ```
-            
-Error handling:
+
+**Reading request body:**
+```javascript
+// Example of reading JSON from request body
+restHandler.addRoute({
+    path: '/order/:orderId',
+    method: 'POST',
+    // getParsedBody() will read all of the chunks of data and parse it as JSON
+    handler: function(rest) {
+        // NOTE: you can also use req.on('data', function(data) {}) to
+        // read data chunks manually and parse the resultant string.
+        rest.getParsedBody(function(err, body) {
+            if (err) {
+                // log the error
+                console.error(err);
+                return rest.send(500, 'Error reading request body');
+            }
+
+            // echo the body (body will be a JavaScript Object)
+            rest.send(body);
+        });
+    }
+});
+
+// Example of reading raw text from request body
+restHandler.addRoute({
+    path: '/echo/body',
+    method: 'POST',
+    // getParsedBody() will read all of the chunks of data and parse it as JSON
+    handler: function(rest) {
+        // NOTE: you can also use req.on('data', function(data) {}) to
+        // read data chunks manually
+        rest.getBody(function(err, body) {
+            if (err) {
+                // log the error
+                console.error(err);
+                return rest.send(500, 'Error reading request body');
+            }
+
+            // echo the body (body will be a String Object)
+            rest.send(body);
+        });
+    }
+});
+```
+
+**Reading cookies:**
+```javascript
+// Example of reading raw text from request body
+restHandler.addRoute({
+    path: '/echo/cookies',
+    // getParsedBody() will read all of the chunks of data and parse it as JSON
+    handler: function(rest) {
+        // rest.getCookies() will lazily parse the request cookies the first
+        // time the method is called.
+        var cookies = rest.getCookies();
+
+        // cookies will be JavaScript object with cookie names as keys
+        // and cookie values as corresponding value
+        rest.send(cookies);
+    }
+});
+```
+
+**Reading basic auth header:**
+```javascript
+// Echo basic auth
+restHandler.addRoute({
+    path: '/echo/basic-auth',
+    // getParsedBody() will read all of the chunks of data and parse it as JSON
+    handler: function(rest) {
+        // rest.getBasicAuth() will lazily parse the request "authorization" header
+        // using the "basic-auth-parser" module
+        // (see https://github.com/mmalecki/basic-auth-parser)
+        var basicAuth = rest.getBasicAuth();
+        rest.send(basicAuth);
+    }
+});
+```
+
+**Error handling:**
 ```javascript
 // Add a route that will send an error
 restHandler.addRoute({
@@ -154,7 +270,7 @@ restHandler.errorHandler(function(rest, err) {
 });
 ```
 
-Start an http server and delegate handling of requests to REST handler
+**Start an http server and delegate handling of requests to REST handler:**
 ```javascript
 // Create standard HTTP server
 var server = require('http').createServer();
