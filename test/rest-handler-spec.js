@@ -69,6 +69,12 @@ describe('route request', function() {
         routes: [
             {
                 path: '/cars',
+                
+                before: function(rest) {
+                    rest.routeBeforeInvoked = true;
+                    rest.next();
+                },
+                
                 handler: function(rest) {
                     rest.send(carsResponse);
                 }
@@ -110,6 +116,11 @@ describe('route request', function() {
                 }
             }
         ]
+    });
+    
+    myRestHandler.before(function(rest) {
+        rest.beforeInvoked = true;
+        rest.next();
     });
 
     it('should send 404 for unrecognized route', function() {
@@ -161,6 +172,26 @@ describe('route request', function() {
         expect(res.mock_getWritten()).to.equal('Danger! System overheating.');
     });
 
+    it('should support middleware added via before()', function() {
+        var req = new MockRequest();
+        req.url = '/cause/error';
+        
+        var res = new MockResponse();
+        
+        var rest = myRestHandler.handle(req, res);
+        expect(rest.beforeInvoked).to.equal(true);
+    });
+    
+    it('should support route-specific middleware', function() {
+        var req = new MockRequest();
+        req.url = '/cars';
+        
+        var res = new MockResponse();
+        
+        var rest = myRestHandler.handle(req, res);
+        expect(rest.routeBeforeInvoked).to.equal(true);
+    });
+    
     it('should serialize errors and use given status code', function() {
         var req = new MockRequest();
         req.url = '/cause/error/400';

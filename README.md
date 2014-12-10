@@ -99,6 +99,34 @@ restHandler.addRoute({
 });
 ```
 
+// Route-specific "middleware"
+restHandler.addRoute({
+    path: '/top-secret',
+    
+    method: 'GET',
+    
+    // The before property can be a single function or an array of functions.
+    // These function can allow the request to proceed by calling rest.next().
+    before: [
+        function(rest) {
+            if (rest.url.query.secretCode === 'test') {
+                // allow request to proceed
+                rest.next();
+            } else {
+                // send back error
+                rest.error(403, 'Access denied!');
+            }
+        }
+    ],
+    
+    handler: function(rest) {
+        rest.send({
+            message: 'Congratulations! You have been allowed access.'
+        });
+    }
+});
+```
+            
 Error handling:
 ```javascript
 // Add a route that will send an error
