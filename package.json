@@ -3,6 +3,10 @@
   "version": "1.2.7",
   "description": "A module for creating a request handler that does REST style routing",
   "homepage": "https://github.com/philidem/node-rest-handler",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/philidem/node-rest-handler.git"
+  },
   "author": "Phil Gates-Idem <phillip.idem@gmail.com>",
   "main": "./index.js",
   "devDependencies": {
@@ -15,7 +19,7 @@
   },
   "dependencies": {
     "basic-auth-parser": "0.0.x",
-    "path-based-router": "^1.1.2",
+    "path-based-router": "^1.1.3",
     "raptor-async": "^1.0.2"
   },
   "keywords": [
