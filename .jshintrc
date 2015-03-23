@@ -6,7 +6,8 @@
         "require": true,
         "__dirname": true,
         "process": true,
-        "module": true
+        "module": true,
+        "Buffer": true
     },
     "strict": false,
     "globalstrict": true,
