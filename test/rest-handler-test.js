@@ -18,7 +18,7 @@ describe('default GET method routing configuration', function() {
     });
 
     var router = myRestHandler.getMethodRouter('*');
-    
+
     it('should contain 4 routes', function() {
         expect(router.getRoutes().length).to.equal(4);
     });
@@ -46,7 +46,7 @@ describe('default GET method routing configuration', function() {
         var match = router.findRoute('/cars/123/bad');
         expect(match).to.equal(null);
     });
-    
+
     it('should support resetting of routing table', function() {
         router.reset();
         expect(router.getRoutes().length).to.equal(0);
@@ -67,12 +67,12 @@ describe('route request', function() {
 
     var myRestHandler = require('..')
         .create()
-    
+
         .before(function(rest) {
             rest.beforeInvoked = true;
             rest.next();
         })
-        
+
         .middleware({
             init: function(restHandler) {
                 restHandler.on('route', function(event) {
@@ -86,35 +86,35 @@ describe('route request', function() {
                 });
             }
         });
-        
+
     [
         {
             path: '/cars',
-            
+
             method: 'GET',
-            
+
             before: function(rest) {
                 rest.routeBeforeInvoked = true;
                 rest.next();
             },
-            
+
             handler: function(rest) {
                 rest.send(carsResponse);
             }
         },
-        
+
         {
             path: '/cars',
-            
+
             method: 'POST',
-            
+
             handler: function(rest) {
                 rest.send({
                     success: true
                 });
             }
         },
-        
+
         {
             path: '/cars/:carId',
             handler: function(rest) {
@@ -183,16 +183,16 @@ describe('route request', function() {
         expect(res.getHeader('Content-Type')).to.equal('application/json');
         expect(JSON.parse(res.mock_getWritten())).to.deep.equal(carsResponse);
     });
-    
+
     it('should return method not allowed if route match found but not for exact method', function() {
         var req = new MockRequest();
         req.url = '/cars';
         req.method = 'PATCH';
-        
+
         var res = new MockResponse();
-        
+
         myRestHandler.handle(req, res);
-        
+
         expect(res.getHeader('Allow')).to.equal('GET,POST');
         expect(res.statusCode).to.equal(405);
         expect(res.mock_getWritten()).to.equal('Method Not Allowed');
@@ -227,36 +227,36 @@ describe('route request', function() {
     it('should support middleware added via before()', function() {
         var req = new MockRequest();
         req.url = '/cause/error';
-        
+
         var res = new MockResponse();
-        
+
         var rest = myRestHandler.handle(req, res);
         expect(rest.beforeInvoked).to.equal(true);
     });
-    
+
     it('should support middleware with an init function', function() {
         var req = new MockRequest();
         req.url = '/route-specific-middleware';
-        
+
         var res = new MockResponse();
-        
+
         var rest = myRestHandler.handle(req, res);
-        
+
         expect(rest.url.path).to.equal('/route-specific-middleware');
         expect(rest.route._before.length).to.equal(1);
         expect(rest.specialMiddlewareAdded).to.equal(true);
     });
-    
+
     it('should support route-specific middleware', function() {
         var req = new MockRequest();
         req.url = '/cars';
-        
+
         var res = new MockResponse();
-        
+
         var rest = myRestHandler.handle(req, res);
         expect(rest.routeBeforeInvoked).to.equal(true);
     });
-    
+
     it('should serialize errors and use given status code', function() {
         var req = new MockRequest();
         req.url = '/cause/error/400';
@@ -273,7 +273,7 @@ describe('route request', function() {
         var req = new MockRequest({
             method: 'POST',
             // simulate chunks of data
-            data: ['this ', 'is ', 'a ', 'test']
+            data: [new Buffer('this '), new Buffer('is '), new Buffer('a '), new Buffer('test')]
         });
         req.url = '/echo/body';
 
@@ -285,11 +285,27 @@ describe('route request', function() {
         expect(res.mock_getWritten()).to.equal('this is a test');
     });
 
+    it('should support rest.getBodyBuffer()', function() {
+        var req = new MockRequest({
+            method: 'POST',
+            // simulate chunks of data
+            data: [new Buffer('this '), new Buffer('is '), new Buffer('a '), new Buffer('test')]
+        });
+        req.url = '/echo/body';
+
+        var res = new MockResponse();
+
+        var rest = myRestHandler.handle(req, res);
+        expect(res.getHeader('Content-Type')).to.equal('text/plain');
+        expect(rest.res.statusCode).to.equal(200);
+        expect(res.mock_getWritten()).to.equal((new Buffer('this is a test')).toString());
+    });
+
     it('should support rest.getParsedBody()', function() {
         var req = new MockRequest({
             method: 'POST',
             // simulate chunks of data
-            data: ['{', '"a":', '123', '}']
+            data: [new Buffer('{'), new Buffer('"a":'), new Buffer('123'), new Buffer('}')]
         });
         req.url = '/echo/parsed-body';
 
