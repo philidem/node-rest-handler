@@ -319,3 +319,31 @@ describe('route request', function() {
         });
     });
 });
+
+describe('notFound overrride', function() {
+    var myRestHandler = require('..')
+        .create({
+            onRouteNotFound: function(message, req, res, socket) {
+                if (typeof message !== "string") {
+                    res = req;
+                    req = message;
+                }
+
+                res.setHeader('Content-Type', 'text/plain');
+                res.statusCode = 200;
+                res.end("Custom Handler");
+            }
+        });
+
+    it('should send 200 for unrecognized route', function() {
+        var req = new MockRequest();
+        req.url = '/does/not/exist';
+
+        var res = new MockResponse();
+
+        myRestHandler.handle(req, res);
+
+        expect(res.statusCode).to.equal(200);
+        expect(res.mock_getWritten()).to.equal("Custom Handler");
+    });
+});
