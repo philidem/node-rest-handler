@@ -270,6 +270,26 @@ restHandler.errorHandler(function(rest, err) {
 });
 ```
 
+**Override notFound handler:**
+```javascript
+// By default the notFound handler will send the status message as plaintext with a 404 status code.
+// You can override this behavior using the `onRouteNotFound` option.
+require('rest-handler').create({
+    onRouteNotFound: function (message, req, res, socket) {
+        if (typeof message !== "string") {
+            // Message is optional.
+            res = req;
+            req = message;
+        }
+
+        // Respond however you would like.
+        res.statusCode = 200;
+        res.end("Hello World");
+    }
+})
+```
+
+
 **Start an http server and delegate handling of requests to REST handler:**
 ```javascript
 // Create standard HTTP server
